@@ -1,0 +1,164 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# imx95-bsp-skills — Target Profile Template
+# Schema version: 1.0
+#
+# Copy this file to targets/<profile_name>.yaml and fill in all fields.
+# Fields marked REQUIRED must be set. Fields marked OPTIONAL may be left null.
+# See context/target-platform-contract.md for full field documentation.
+# ─────────────────────────────────────────────────────────────────────────────
+
+schema_version: "1.0"
+
+# ── Identity ──────────────────────────────────────────────────────────────────
+
+profile_name: "CHANGE_ME"
+# REQUIRED. Short slug: lowercase, hyphens only, max 40 chars.
+# Examples: "frdm-imx95-base", "acme-carrier-v1", "imx95-evk-sd"
+
+description: "CHANGE_ME — brief description of this target"
+# REQUIRED. One-line human-readable description.
+
+# ── Board ─────────────────────────────────────────────────────────────────────
+
+board:
+  name: "CHANGE_ME"
+  # REQUIRED. Human-readable board name.
+  # Examples: "FRDM-IMX95", "i.MX95-19x19-LPDDR5-EVK", "ACME-Carrier-v1"
+
+  variant: "CHANGE_ME"
+  # REQUIRED. Board variant string.
+  # Examples: "19x19-lpddr5-evk", "15x15-evk", "acme-rev1"
+
+  soc: "imx95"
+  # REQUIRED. Must be "imx95" for all boards in this bundle.
+
+  boot_device: "emmc"
+  # REQUIRED. One of: "emmc" | "sd" | "flexspi"
+
+  custom_carrier: false
+  # REQUIRED. Set to true if using imx95-derive-carrier for a custom board.
+
+# ── Yocto Build ───────────────────────────────────────────────────────────────
+
+yocto:
+  machine: "CHANGE_ME"
+  # REQUIRED. Exact MACHINE= value for bitbake.
+  # Valid i.MX 95 values:
+  #   "imx95-19x19-lpddr5-evk"   ← FRDM-IMX95 / 19x19 EVK
+  #   "imx95frdm"                 ← FRDM-IMX95 (alternate machine name)
+  #   "imx95-15x15-evk"           ← 15x15 EVK
+  # See references/bsp-platforms-catalogue.md for full list.
+
+  image_recipe: "imx-image-full"
+  # REQUIRED. bitbake target image recipe.
+  # Options:
+  #   "core-image-base"        — minimal console (~500 MB)
+  #   "imx-image-multimedia"   — multimedia stack (~1.5 GB)
+  #   "imx-image-full"         — full NXP demo image (~2.5 GB) [DEFAULT]
+
+  distro: "fsl-imx-xwayland"
+  # REQUIRED. Yocto DISTRO.
+  # Options:
+  #   "fsl-imx-xwayland"   ← X11 + Wayland [DEFAULT for FRDM]
+  #   "fsl-imx-wayland"    ← Wayland only
+  #   "fsl-imx-fb"         ← Framebuffer (no display server)
+
+  bsp_manifest_url: "https://github.com/nxp-imx/imx-manifest"
+  # REQUIRED. Do not change unless using a fork or mirror.
+
+  bsp_manifest_branch: "imx-linux-scarthgap"
+  # REQUIRED. BSP release branch.
+  # "imx-linux-scarthgap" = Yocto Scarthgap (5.0 LTS) [CURRENT]
+
+  bsp_manifest_file: "imx-6.6.52-2.2.0.xml"
+  # REQUIRED. Pinned manifest XML file.
+  # Check https://github.com/nxp-imx/imx-manifest/tree/imx-linux-scarthgap
+  # for the latest available manifest.
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+
+paths:
+  workspace_root: "~/imx95-workspace"
+  # REQUIRED. Absolute path or ~/path to BSP workspace root.
+  # CHANGE THIS to your actual workspace path.
+
+  bsp_sources: "sources"
+  # REQUIRED. Relative to workspace_root. Standard value: "sources"
+
+  build_dir: "build"
+  # REQUIRED. Relative to workspace_root. Standard value: "build"
+
+  custom_layer: "sources/meta-imx95-custom"
+  # REQUIRED. Relative to workspace_root.
+
+  dt_overlay_dir: "sources/meta-imx95-custom/recipes-kernel/linux/files/overlays"
+  # REQUIRED. Relative to workspace_root.
+
+  overlay_tracker: "overlay-tracker"
+  # REQUIRED. Relative to workspace_root.
+
+  deploy_dir: "build/tmp/deploy/images/CHANGE_ME_MACHINE"
+  # REQUIRED. Replace CHANGE_ME_MACHINE with the yocto.machine value above.
+  # Example: "build/tmp/deploy/images/imx95-19x19-lpddr5-evk"
+
+  staging_dir: "staging"
+  # REQUIRED. Relative to workspace_root.
+
+# ── Flash / Deploy ────────────────────────────────────────────────────────────
+
+flash:
+  tool: "uuu"
+  # REQUIRED. MUST be "uuu". There is no flash.sh for i.MX 95.
+
+  uuu_script: "references/uuu-scripts/frdm-imx95-emmc.uuu"
+  # REQUIRED. Path to uuu script (relative to workspace_root or absolute).
+  # For FRDM-IMX95 eMMC: "references/uuu-scripts/frdm-imx95-emmc.uuu"
+  # For FRDM-IMX95 SD:   "references/uuu-scripts/frdm-imx95-sd.uuu"
+  # For custom boards:   create your own .uuu script
+
+  uuu_version_min: "1.5.21"
+  # REQUIRED. Minimum uuu version. Do not lower below 1.5.21.
+
+  recovery_mode_jumper: "J301"
+  # REQUIRED. Recovery mode jumper/connector label on the board.
+  # FRDM-IMX95: "J301"
+
+  usb_vid_pid: "1fc9:0146"
+  # REQUIRED. USB VID:PID in recovery mode. i.MX 95 ROM: "1fc9:0146"
+
+# ── Device Tree ───────────────────────────────────────────────────────────────
+
+device_tree:
+  base_dts: "imx95-19x19-lpddr5-evk.dts"
+  # REQUIRED. Base DTS filename in sources/linux-imx/arch/arm64/boot/dts/freescale/
+  # For FRDM-IMX95 (19x19): "imx95-19x19-lpddr5-evk.dts"
+  # For FRDM-IMX95 (frdm):  "imx95frdm.dts"
+  # For 15x15 EVK:           "imx95-15x15-evk.dts"
+
+  overlay_prefix: "imx95-custom"
+  # REQUIRED. Prefix for generated overlay files.
+  # For custom carriers, use a descriptive prefix: "imx95-acme"
+
+  kernel_dt_path: "sources/linux-imx/arch/arm64/boot/dts/freescale/"
+  # REQUIRED. Relative to workspace_root. Standard value as shown.
+
+# ── Custom Carrier ────────────────────────────────────────────────────────────
+
+custom_carrier:
+  carrier_name: null
+  # OPTIONAL (required if board.custom_carrier = true).
+  # Short slug for the custom carrier: "acme-carrier-v1"
+
+  base_overlay: null
+  # OPTIONAL (required if board.custom_carrier = true).
+  # Main carrier overlay filename: "imx95-acme-carrier-v1.dts"
+
+  schematic_pdf: null
+  # OPTIONAL. Path to carrier schematic PDF.
+
+# ── Notes ─────────────────────────────────────────────────────────────────────
+
+notes: |
+  Created from platform_template.yaml.
+  Replace all CHANGE_ME placeholders before use.
+  Run imx95-init-target to generate this file interactively.

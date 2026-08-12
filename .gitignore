@@ -1,0 +1,43 @@
+# imx95-bsp-skills .gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test / eval output
+evals/output/
+evals/*.log
+*.eval_result.json
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Shell history
+.bash_history
+
+# Local overrides (never commit workspace-local config)
+.local_config.yaml
+local_overrides.sh

@@ -1,0 +1,81 @@
+{
+  "skill": "imx95-quick-start",
+  "version": "0.1.0",
+  "cases": [
+    {
+      "id": "qs-001",
+      "description": "Happy path: user asks for first-time setup with FRDM-IMX95",
+      "input": "help me set up the i.MX 95 BSP workspace for the FRDM-IMX95 EVK",
+      "expected_skill": "imx95-quick-start",
+      "expected_actions": [
+        "check host tools",
+        "ask board variant",
+        "ask image recipe",
+        "ask boot device",
+        "show setup plan",
+        "wait for approval",
+        "invoke imx95-init-target",
+        "invoke imx95-download-bsp",
+        "invoke imx95-init-source",
+        "invoke imx95-print-bsp-info"
+      ],
+      "must_not_do": [
+        "start repo sync without showing plan first",
+        "skip tool check",
+        "proceed without user approval of plan"
+      ],
+      "pass_criteria": "Shows complete setup plan with estimated times, waits for 'proceed' before starting"
+    },
+    {
+      "id": "qs-002",
+      "description": "Missing repo tool — should guide user to install it",
+      "input": "help me set up the BSP",
+      "precondition": "repo tool not on PATH",
+      "expected_skill": "imx95-quick-start",
+      "expected_actions": [
+        "check host tools",
+        "detect missing repo",
+        "show install instructions for repo",
+        "stop and wait"
+      ],
+      "must_not_do": [
+        "proceed with setup when required tools are missing",
+        "attempt repo init without repo tool"
+      ],
+      "pass_criteria": "Detects missing repo, shows install command, stops gracefully"
+    },
+    {
+      "id": "qs-003",
+      "description": "Custom carrier board setup",
+      "input": "I need to set up the BSP for a custom carrier board based on the FRDM-IMX95 SOM",
+      "expected_skill": "imx95-quick-start",
+      "expected_actions": [
+        "ask carrier board name",
+        "set custom_carrier: true in target profile",
+        "invoke imx95-derive-carrier after imx95-init-source"
+      ],
+      "must_not_do": [
+        "skip imx95-derive-carrier for custom carrier",
+        "use wrong MACHINE name for custom carrier"
+      ],
+      "pass_criteria": "Includes imx95-derive-carrier in the plan, sets custom_carrier: true"
+    },
+    {
+      "id": "qs-004",
+      "description": "Low disk space warning",
+      "input": "start from scratch with the i.MX 95 BSP",
+      "precondition": "only 40 GB free disk space",
+      "expected_skill": "imx95-quick-start",
+      "expected_actions": [
+        "check disk space",
+        "warn about insufficient space",
+        "still allow user to proceed with explicit acknowledgment"
+      ],
+      "must_not_do": [
+        "silently proceed with low disk space",
+        "hard-fail and refuse to continue"
+      ],
+      "pass_criteria": "Shows disk space warning with specific GB values, allows user to proceed with acknowledgment"
+    }
+  ]
+}
