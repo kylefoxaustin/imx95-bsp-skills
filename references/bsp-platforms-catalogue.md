@@ -1,37 +1,50 @@
-# BSP Platforms Catalogue — Supported i.MX 95 Board Variants
+# BSP Platforms Catalogue — i.MX 95 Board Variants
 
-> **Reference document.** Lists all supported i.MX 95 board variants with their MACHINE names,
-> uuu script names, default image recipes, known DT files, and recovery mode settings.
+> # 🔴 ALMOST EVERYTHING IN THIS FILE IS [UNVERIFIED]
+>
+> This document was written by an agent with **no board and no BSP checkout**. It is retained
+> because its *shape* is useful — these are the fields a target profile needs — but **the values
+> are not evidence.** A `MACHINE` name that is wrong fails with a cryptic bitbake error, which is
+> the *good* outcome; the bad one is a name that exists and builds a **different board**.
+>
+> **Confirmed against the running board** (`references/imx95-ground-truth.md`):
+>
+> | field | value | tag |
+> |---|---|:--|
+> | DT `model` | **NXP FRDM-IMX95-PRO** | [MEASURED] |
+> | DT `compatible` | **`fsl,frdm-imx95-pro fsl,imx95`** | [MEASURED] |
+> | live DTB basename | **`imx95-19x19-frdm-pro-neutron.dtb`** | [MEASURED] |
+> | RAM | 16 GB LPDDR | [SOURCED] |
+> | eMMC | 29.6 GB | [SOURCED] |
+> | Yocto `MACHINE` | 🔴 **[UNKNOWN]** | — |
+>
+> **On the MACHINE name specifically:** the value below (`imx95-19x19-lpddr5-evk`) has **1**
+> supporting reference across the fleet's i.MX95 repos. `imx95-19x19-frdm-pro` has **68**;
+> `imx95-15x15-evk` has 45. The *DTB basename* is measured; the *Yocto MACHINE that produces it*
+> is a different string nobody has established. **`imx95-init-target` must ASK.**
 
 ---
 
 ## Supported Boards
 
-### 1. NXP FRDM-IMX95 EVK (Primary Target)
+### 1. NXP FRDM-IMX95-PRO (Primary Target)
 
-**Full name:** NXP Freedom Development Board for i.MX 95  
-**Form factor:** 19×19 mm SOM on FRDM carrier board  
-**Memory:** LPDDR5, 8 GB  
-**Storage:** eMMC 32 GB (primary), microSD slot  
-**Display:** MIPI-DSI connector  
-**Camera:** MIPI-CSI connector (2-lane)  
-**USB:** USB3.0 OTG (USB-C, J301), USB2.0 Host (USB-A)  
-**PCIe:** M.2 Key-E slot (PCIe Gen3 x1)  
-**Ethernet:** 1 GbE (ENET1)  
-**Debug:** USB-UART via J1003 (micro-USB), 115200 8N1  
+**DT model (measured):** `NXP FRDM-IMX95-PRO`
+**Memory:** 16 GB LPDDR [SOURCED] — *an earlier version of this file said "LPDDR5, 8 GB"*
+**Storage:** eMMC 29.6 GB [SOURCED], microSD slot [UNVERIFIED]
+**Display / Camera / USB / PCIe / Ethernet / Debug:** all **[UNVERIFIED]** below — connector
+designators, lane counts and baud rates were written from inference, not from the board.
 
-| Field | Value |
-|---|---|
-| **MACHINE** | `imx95-19x19-lpddr5-evk` |
-| **Alternate MACHINE** | `imx95frdm` |
-| **Default image recipe** | `imx-image-full` |
-| **Default DISTRO** | `fsl-imx-xwayland` |
-| **Base DTS** | `imx95-19x19-lpddr5-evk.dts` |
-| **Alternate DTS** | `imx95frdm.dts` |
-| **uuu script (eMMC)** | `frdm-imx95-emmc.uuu` |
-| **uuu script (SD)** | `frdm-imx95-sd.uuu` |
-| **USB VID:PID (recovery)** | `1fc9:0146` |
-| **Recovery connector** | J301 (USB-C OTG) |
+| Field | Value | tag |
+|---|---|:--|
+| **MACHINE** | `imx95-19x19-lpddr5-evk` | 🔴 **[UNKNOWN] — ASK, do not default** |
+| **Alternate MACHINE** | `imx95frdm` | [UNVERIFIED] |
+| **Default image recipe** | `imx-image-full` | [UNVERIFIED] |
+| **Default DISTRO** | `fsl-imx-xwayland` | [UNVERIFIED] |
+| **Base DTS** | `imx95-19x19-lpddr5-evk.dts` | [UNVERIFIED] — live DTB is `imx95-19x19-frdm-pro[-neutron]` |
+| **uuu script (eMMC / SD)** | `frdm-imx95-emmc.uuu` / `-sd.uuu` | [UNVERIFIED] — **and these files do not exist in this repo** |
+| **USB VID:PID (recovery)** | `1fc9:0146` | [UNVERIFIED] — read it from `uuu -lsusb` on your board |
+| **Recovery connector** | J301 (USB-C OTG) | [UNVERIFIED] |
 | **Debug UART** | J1003 (micro-USB), `/dev/ttyUSB0`, 115200 8N1 |
 
 **Recovery Mode Jumper Settings (SW1 DIP switch):**
