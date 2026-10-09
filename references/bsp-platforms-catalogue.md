@@ -15,7 +15,8 @@
 > | DT `compatible` | **`fsl,frdm-imx95-pro fsl,imx95`** | [MEASURED] |
 > | live DTB basename | **`imx95-19x19-frdm-pro-neutron.dtb`** | [MEASURED] |
 > | RAM | 16 GB LPDDR | [SOURCED] |
-> | eMMC | ⚠️ ~~29.6 GB~~ **CONTRADICTED** — mounted filesystems total 67 G (`/` 56 G + `/run/media/root-mmcblk0p2` 11 G). Capacity open; ground-truth §5. | [UNVERIFIED] |
+> | eMMC `mmcblk0` | **29.6 GB** — confirmed on the board; holds a **non-live** rootfs at p2 | [MEASURED] |
+> | microSD `mmcblk1` | **58 GB** — 🔴 **this is what the board actually boots and runs from** (`/` = `mmcblk1p2`) | [MEASURED] |
 > | Yocto `MACHINE` | 🔴 **[UNKNOWN]** | — |
 >
 > **On the MACHINE name specifically:** the value below (`imx95-19x19-lpddr5-evk`) has **1**
@@ -31,10 +32,21 @@
 
 **DT model (measured):** `NXP FRDM-IMX95-PRO`
 **Memory:** 16 GB LPDDR [SOURCED] — *an earlier version of this file said "LPDDR5, 8 GB"*
-**Storage:** ⚠️ eMMC capacity **[UNVERIFIED]** — the "29.6 GB" vendor figure is contradicted by the
-board itself: `/` measures 56 G and `/run/media/root-mmcblk0p2` 11 G, so 67 G of filesystem is
-mounted. Which device backs `/` is **[UNKNOWN]** (`/dev/root` unresolved). microSD slot [UNVERIFIED].
-Sequential throughput **298 MB/s read / 152 MB/s write** [MEASURED]. See ground-truth §5.
+**Storage [MEASURED 2026-10-08]:** 🔴 **this board boots and runs from the microSD card, not the
+eMMC** — a BSP-relevant fact that changes every flashing and imaging instruction.
+
+    mmcblk0   29.6 G  eMMC      p1 256 M vfat -> /run/media/boot-mmcblk0p1
+                                p2 10.6 G ext4 -> /run/media/root-mmcblk0p2   (NON-LIVE rootfs)
+    mmcblk0boot0/1  31.5 M each (eMMC boot partitions)
+    mmcblk1     58 G  microSD   p1 256 M vfat -> /run/media/boot-mmcblk1p1
+                                p2 57.7 G ext4 -> /                           (THE LIVE ROOTFS)
+
+So there are **two ext4 roots and two vfat boot partitions mounted at once**. `df` labels `/` as
+`/dev/root`, a kernel-supplied name that is *not* a symlink — `readlink -f` returns itself, so use
+`findmnt -no SOURCE /`. The microSD slot is therefore **[MEASURED] present and in use**, not
+[UNVERIFIED]. Sequential throughput **298 MB/s read / 152 MB/s write** [MEASURED].
+⚠️ **Two boot partitions is the likely explanation for `.ORIG` DTB backups being reported "in two
+places"** — confirm which the bootloader reads before trusting either. See ground-truth §5.
 **Display / Camera / USB / PCIe / Ethernet / Debug:** all **[UNVERIFIED]** below — connector
 designators, lane counts and baud rates were written from inference, not from the board.
 
