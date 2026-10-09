@@ -15,7 +15,7 @@
 > | DT `compatible` | **`fsl,frdm-imx95-pro fsl,imx95`** | [MEASURED] |
 > | live DTB basename | **`imx95-19x19-frdm-pro-neutron.dtb`** | [MEASURED] |
 > | RAM | 16 GB LPDDR | [SOURCED] |
-> | eMMC | 29.6 GB | [SOURCED] |
+> | eMMC | ⚠️ ~~29.6 GB~~ **CONTRADICTED** — mounted filesystems total 67 G (`/` 56 G + `/run/media/root-mmcblk0p2` 11 G). Capacity open; ground-truth §5. | [UNVERIFIED] |
 > | Yocto `MACHINE` | 🔴 **[UNKNOWN]** | — |
 >
 > **On the MACHINE name specifically:** the value below (`imx95-19x19-lpddr5-evk`) has **1**
@@ -31,7 +31,10 @@
 
 **DT model (measured):** `NXP FRDM-IMX95-PRO`
 **Memory:** 16 GB LPDDR [SOURCED] — *an earlier version of this file said "LPDDR5, 8 GB"*
-**Storage:** eMMC 29.6 GB [SOURCED], microSD slot [UNVERIFIED]
+**Storage:** ⚠️ eMMC capacity **[UNVERIFIED]** — the "29.6 GB" vendor figure is contradicted by the
+board itself: `/` measures 56 G and `/run/media/root-mmcblk0p2` 11 G, so 67 G of filesystem is
+mounted. Which device backs `/` is **[UNKNOWN]** (`/dev/root` unresolved). microSD slot [UNVERIFIED].
+Sequential throughput **298 MB/s read / 152 MB/s write** [MEASURED]. See ground-truth §5.
 **Display / Camera / USB / PCIe / Ethernet / Debug:** all **[UNVERIFIED]** below — connector
 designators, lane counts and baud rates were written from inference, not from the board.
 
