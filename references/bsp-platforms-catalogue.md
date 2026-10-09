@@ -51,8 +51,8 @@ So there are **two ext4 roots and two vfat boot partitions mounted at once**. `d
 
 | device | bus | width | raw read |
 |---|---|--:|--:|
-| `mmcblk0` eMMC | HS400 enhanced strobe, 200 MHz | 8-bit | **223 MB/s** |
-| `mmcblk1` SD | SD UHS SDR104, 208 MHz | 4-bit | **83.7 MB/s** |
+| `mmcblk0` eMMC | HS400 enh. strobe, 200 MHz [SOURCED — driver] | 8-bit | **223 MB/s** [MEASURED] |
+| `mmcblk1` SD | SD UHS SDR104, 208 MHz [SOURCED — driver] | 4-bit | **83.7 MB/s** [MEASURED] |
 
 ⚠️ The dossier's **298 / 152 MB/s** figure is **the eMMC, file-level, cache status unrecorded** —
 method was *"fio on the real eMMC mount"*, the SD card is physically excluded (SDR104 at 4 bits
@@ -73,7 +73,7 @@ designators, lane counts and baud rates were written from inference, not from th
 | **Default image recipe** | `imx-image-full` | [UNVERIFIED] |
 | **Default DISTRO** | `fsl-imx-xwayland` | [UNVERIFIED] |
 | **Base DTS** | `imx95-19x19-lpddr5-evk.dts` | [UNVERIFIED] — live DTB is `imx95-19x19-frdm-pro[-neutron]` |
-| **uuu script (eMMC / SD)** | `frdm-imx95-emmc.uuu` / `-sd.uuu` | [UNVERIFIED] — **and these files do not exist in this repo** |
+| **uuu scripts** (filenames, not storage claims) | `frdm-imx95-emmc.uuu` / `-sd.uuu` | [UNVERIFIED] — **and these files do not exist in this repo** |
 | **USB VID:PID (recovery)** | `1fc9:0146` | [UNVERIFIED] — read it from `uuu -lsusb` on your board |
 | **Recovery connector** | J301 (USB-C OTG) | [UNVERIFIED] |
 | **Debug UART** | J1003 (micro-USB), `/dev/ttyUSB0`, 115200 8N1 |
@@ -82,9 +82,9 @@ designators, lane counts and baud rates were written from inference, not from th
 
 | Mode | SW1[1] | SW1[2] | SW1[3] | SW1[4] | Description |
 |---|---|---|---|---|---|
-| eMMC boot (normal) | ON | OFF | OFF | OFF | Normal operation after flashing |
+| eMMC boot — ⚠️ labelled "normal" by NXP; the fleet board boots from SD `mmcblk1` instead | ON | OFF | OFF | OFF | Normal operation after flashing |
 | USB Serial Download | OFF | OFF | OFF | OFF | Recovery/flash mode |
-| SD card boot | OFF | ON | OFF | OFF | Boot from SD card |
+| SD card boot — the fleet FRDM-IMX95-PRO's actual configuration (`/` = `mmcblk1p2`) | OFF | ON | OFF | OFF | Boot from SD card |
 
 **Recovery procedure:**
 1. Power off board
@@ -121,7 +121,7 @@ uses the same SOM and the same BSP machine configuration.
 | **Default image recipe** | `imx-image-full` |
 | **Default DISTRO** | `fsl-imx-xwayland` |
 | **Base DTS** | `imx95-19x19-lpddr5-evk.dts` |
-| **uuu script (eMMC)** | `frdm-imx95-emmc.uuu` |
+| **uuu script** (filename, not a storage claim) | `frdm-imx95-emmc.uuu` |
 | **USB VID:PID (recovery)** | `1fc9:0146` |
 | **Recovery connector** | J301 (USB-C OTG) |
 
@@ -142,7 +142,7 @@ and DTS from the 19×19 EVK.
 | **Default image recipe** | `imx-image-full` |
 | **Default DISTRO** | `fsl-imx-xwayland` |
 | **Base DTS** | `imx95-15x15-evk.dts` |
-| **uuu script (eMMC)** | `imx95-15x15-evk-emmc.uuu` |
+| **uuu script** (filename, not a storage claim) | `imx95-15x15-evk-emmc.uuu` |
 | **USB VID:PID (recovery)** | `1fc9:0146` |
 | **Recovery connector** | J301 (USB-C OTG) |
 
@@ -150,9 +150,9 @@ and DTS from the 19×19 EVK.
 
 | Mode | SW1[1] | SW1[2] | SW1[3] | SW1[4] |
 |---|---|---|---|---|
-| eMMC boot (normal) | ON | OFF | OFF | OFF |
+| eMMC boot — "normal" per NXP docs [UNVERIFIED: no 15×15 board in the fleet; not the FRDM, see §1] | ON | OFF | OFF | OFF |
 | USB Serial Download | OFF | OFF | OFF | OFF |
-| SD card boot | OFF | ON | OFF | OFF |
+| SD card boot [UNVERIFIED: no 15×15 board in the fleet] | OFF | ON | OFF | OFF |
 
 **Known DT files:**
 ```
@@ -206,8 +206,13 @@ For a fully custom board (different SOM or SoC package):
 
 | Script | Board | Boot device | Description |
 |---|---|---|---|
-| `frdm-imx95-emmc.uuu` | FRDM-IMX95 / 19×19 EVK | eMMC | Flash full image to eMMC |
-| `frdm-imx95-sd.uuu` | FRDM-IMX95 / 19×19 EVK | SD | Flash full image to SD card |
+| `frdm-imx95-emmc.uuu` | FRDM-IMX95 / 19×19 EVK | eMMC `mmcblk0` | Flashes the eMMC — **on the fleet board this is NOT the live rootfs** (it holds a non-live root at `mmcblk0p2`), so this will appear to "do nothing" |
+| `frdm-imx95-sd.uuu` | FRDM-IMX95 / 19×19 EVK | SD `mmcblk1` | Flashes the SD card — 🔴 **on the fleet board this DESTROYS the running system** (`/` = `mmcblk1p2`) |
+
+> 🔴 **Which of these two is destructive depends on the board in front of you, and on the fleet's
+> FRDM-IMX95-PRO it is the SD one.** That board boots from the card (ground-truth §1/§5). Confirm
+> with `findmnt -no SOURCE /` **before** choosing a script — not from this table, which describes the
+> scripts and cannot know your boot configuration.
 
 uuu scripts are located in `references/uuu-scripts/` within the skill bundle, and are
 copied to `<workspace>/.imx95-skills/references/uuu-scripts/` by `setup.sh`.
