@@ -303,7 +303,7 @@ The following gates are **mandatory** and cannot be bypassed:
 | Step | Time |
 |---|---|
 | `imx95-promote-image` | < 2 minutes |
-| `imx95-flash-image` (eMMC via uuu) | 3–8 minutes |
+| `imx95-flash-image` (target device via uuu — **name it**: `mmcblk0` eMMC vs `mmcblk1` SD; on the fleet board `/` is `mmcblk1p2`, so the eMMC script no-ops and the SD script destroys the running rootfs) | 3–8 minutes |
 | `imx95-validate-image` (boot + checks) | 5–10 minutes |
 | Total Phase 4 | ~10–20 minutes |
 
