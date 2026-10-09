@@ -16,7 +16,7 @@
 > | live DTB basename | **`imx95-19x19-frdm-pro-neutron.dtb`** | [MEASURED] |
 > | RAM | 16 GB LPDDR | [SOURCED] |
 > | eMMC `mmcblk0` | **29.6 GB** — confirmed on the board; holds a **non-live** rootfs at p2 | [MEASURED] |
-> | microSD `mmcblk1` | **58 GB** — 🔴 **this is what the board actually boots and runs from** (`/` = `mmcblk1p2`) | [MEASURED] |
+> | SD card `mmcblk1` | **58 GB** — 🔴 **this is what the board actually boots and runs from** (`/` = `mmcblk1p2`) | [MEASURED] |
 > | Yocto `MACHINE` | 🔴 **[UNKNOWN]** | — |
 >
 > **On the MACHINE name specifically:** the value below (`imx95-19x19-lpddr5-evk`) has **1**
@@ -32,21 +32,37 @@
 
 **DT model (measured):** `NXP FRDM-IMX95-PRO`
 **Memory:** 16 GB LPDDR [SOURCED] — *an earlier version of this file said "LPDDR5, 8 GB"*
-**Storage [MEASURED 2026-10-08]:** 🔴 **this board boots and runs from the microSD card, not the
+**Storage [MEASURED 2026-10-08]:** 🔴 **this board boots and runs from the SD card, not the
 eMMC** — a BSP-relevant fact that changes every flashing and imaging instruction.
 
     mmcblk0   29.6 G  eMMC      p1 256 M vfat -> /run/media/boot-mmcblk0p1
                                 p2 10.6 G ext4 -> /run/media/root-mmcblk0p2   (NON-LIVE rootfs)
     mmcblk0boot0/1  31.5 M each (eMMC boot partitions)
-    mmcblk1     58 G  microSD   p1 256 M vfat -> /run/media/boot-mmcblk1p1
+    mmcblk1     58 G  SD card   p1 256 M vfat -> /run/media/boot-mmcblk1p1
                                 p2 57.7 G ext4 -> /                           (THE LIVE ROOTFS)
 
 So there are **two ext4 roots and two vfat boot partitions mounted at once**. `df` labels `/` as
 `/dev/root`, a kernel-supplied name that is *not* a symlink — `readlink -f` returns itself, so use
-`findmnt -no SOURCE /`. The microSD slot is therefore **[MEASURED] present and in use**, not
-[UNVERIFIED]. Sequential throughput **298 MB/s read / 152 MB/s write** [MEASURED].
-⚠️ **Two boot partitions is the likely explanation for `.ORIG` DTB backups being reported "in two
-places"** — confirm which the bootloader reads before trusting either. See ground-truth §5.
+`findmnt -no SOURCE /`. An SD card is therefore **[MEASURED] present and in use** — though
+`type=SD`/`name=SD64G` do **not** establish micro- vs full-size, so the **form factor stays
+[UNKNOWN]**.
+
+**Raw-media sequential read, per device** [MEASURED 2026-10-08, @95emulator, `dd iflag=direct`]:
+
+| device | bus | width | raw read |
+|---|---|--:|--:|
+| `mmcblk0` eMMC | HS400 enhanced strobe, 200 MHz | 8-bit | **223 MB/s** |
+| `mmcblk1` SD | SD UHS SDR104, 208 MHz | 4-bit | **83.7 MB/s** |
+
+⚠️ The dossier's **298 / 152 MB/s** figure is **the eMMC, file-level, cache status unrecorded** —
+method was *"fio on the real eMMC mount"*, the SD card is physically excluded (SDR104 at 4 bits
+ceilings near 104 MB/s), but `direct=1` is not recorded and 298 exceeds the raw-media 223.
+**Do not quote it as a media figure.**
+
+✅ **The live boot partition is `/run/media/boot-mmcblk1p1` — the SD card's vfat.** Both `.ORIG`
+DTB backups are on the SD card as well (that partition **and** `/root`); the eMMC boot partition is
+not involved. *(An earlier revision of this file guessed that the two mounted vfat partitions
+explained the two `.ORIG` locations. That was wrong — the dossier's own commands name both paths.)*
 **Display / Camera / USB / PCIe / Ethernet / Debug:** all **[UNVERIFIED]** below — connector
 designators, lane counts and baud rates were written from inference, not from the board.
 
@@ -68,7 +84,7 @@ designators, lane counts and baud rates were written from inference, not from th
 |---|---|---|---|---|---|
 | eMMC boot (normal) | ON | OFF | OFF | OFF | Normal operation after flashing |
 | USB Serial Download | OFF | OFF | OFF | OFF | Recovery/flash mode |
-| SD card boot | OFF | ON | OFF | OFF | Boot from microSD |
+| SD card boot | OFF | ON | OFF | OFF | Boot from SD card |
 
 **Recovery procedure:**
 1. Power off board
@@ -95,7 +111,7 @@ arch/arm64/boot/dts/freescale/
 **Full name:** NXP i.MX 95 19×19 mm LPDDR5 Evaluation Kit  
 **Form factor:** Standalone EVK (no SOM)  
 **Memory:** LPDDR5, 8 GB  
-**Storage:** eMMC 32 GB, microSD  
+**Storage:** eMMC 32 GB, SD card  
 **Note:** This is the same MACHINE as FRDM-IMX95 (`imx95-19x19-lpddr5-evk`). The FRDM board
 uses the same SOM and the same BSP machine configuration.
 
@@ -116,7 +132,7 @@ uses the same SOM and the same BSP machine configuration.
 **Full name:** NXP i.MX 95 15×15 mm Evaluation Kit  
 **Form factor:** Standalone EVK, smaller package variant  
 **Memory:** LPDDR5, 4 GB  
-**Storage:** eMMC 16 GB, microSD  
+**Storage:** eMMC 16 GB, SD card  
 **Note:** Uses a different SoC package (15×15 mm vs 19×19 mm). Different machine config
 and DTS from the 19×19 EVK.
 
