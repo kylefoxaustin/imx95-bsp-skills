@@ -52,7 +52,7 @@ Otherwise, ask the user:
 **Q1: Board variant**
 ```
 Which board are you targeting?
-  1. FRDM-IMX95 EVK (imx95-19x19-lpddr5-evk) [DEFAULT]
+  1. FRDM-IMX95 EVK (imx95-19x19-lpddr5-evk) ⚠️ [UNVERIFIED — 1 fleet reference; NOT a default]
   2. i.MX95-19x19-LPDDR5-EVK (imx95-19x19-lpddr5-evk)
   3. i.MX95-15x15-EVK (imx95-15x15-evk)
   4. Custom carrier board (based on FRDM-IMX95 SOM)
