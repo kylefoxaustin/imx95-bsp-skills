@@ -122,16 +122,16 @@ After successful flash, instruct the user to:
 
 ```bash
 uuu -b emmc_all \
-    staging/latest/imx-boot-imx95-19x19-lpddr5-evk.bin \
-    staging/latest/<image_recipe>-imx95-19x19-lpddr5-evk.rootfs.wic.zst
+    staging/latest/imx-boot-<machine>.bin \
+    staging/latest/<image_recipe>-<machine>.rootfs.wic.zst
 ```
 
 ### SD card flash
 
 ```bash
 uuu -b sd_all \
-    staging/latest/imx-boot-imx95-19x19-lpddr5-evk.bin \
-    staging/latest/<image_recipe>-imx95-19x19-lpddr5-evk.rootfs.wic.zst
+    staging/latest/imx-boot-<machine>.bin \
+    staging/latest/<image_recipe>-<machine>.rootfs.wic.zst
 ```
 
 ### Using a custom uuu script

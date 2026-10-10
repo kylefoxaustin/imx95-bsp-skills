@@ -68,7 +68,7 @@ Based on the output:
   Active Target
     Profile     : frdm-imx95-base
     Board       : FRDM-IMX95
-    MACHINE     : imx95-19x19-lpddr5-evk
+    MACHINE     : imx95-19x19-lpddr5-evk   ⚠️ [UNVERIFIED sample — §7/Q3: 1 fleet ref vs 68 for imx95-19x19-frdm-pro]
     DISTRO      : fsl-imx-xwayland
     Image recipe: imx-image-full
     Boot device : emmc
@@ -98,9 +98,9 @@ Based on the output:
     abc1234 customize(pinmux): enable UART4 on GPIO_IO04/05
     def5678 init: overlay tracker for frdm-imx95-base
 
-  Build Artifacts (build/tmp/deploy/images/imx95-19x19-lpddr5-evk/)
-    imx-boot-imx95-19x19-lpddr5-evk.bin   [present, 2024-01-15 14:32]
-    imx-image-full-imx95-19x19-lpddr5-evk.rootfs.wic.zst  [present]
+  Build Artifacts (build/tmp/deploy/images/<machine>/)
+    imx-boot-<machine>.bin   [present, 2024-01-15 14:32]
+    imx-image-full-<machine>.rootfs.wic.zst  [present]
 
   Host Tools
     uuu     : 1.5.21  ✓

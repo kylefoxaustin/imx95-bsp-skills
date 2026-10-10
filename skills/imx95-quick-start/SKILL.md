@@ -191,7 +191,7 @@ Display a complete summary of what will be done:
   SETUP PLAN — imx95-bsp-skills
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Board         : FRDM-IMX95 EVK
-  MACHINE       : imx95-19x19-lpddr5-evk
+  MACHINE       : imx95-19x19-lpddr5-evk   ⚠️ [UNVERIFIED sample — §7/Q3: 1 fleet ref vs 68 for imx95-19x19-frdm-pro]
   Image recipe  : imx-image-full
   DISTRO        : fsl-imx-xwayland
   Boot device   : eMMC

@@ -7,7 +7,7 @@
 #
 # Options:
 #   --carrier-name <name>   Short slug for carrier (e.g. acme-carrier-v1)
-#   --base-dts <file>       Base DTS filename (e.g. imx95-19x19-lpddr5-evk.dts)
+#   --base-dts <file>       Base DTS filename (e.g. <machine>.dts)
 #   --company <name>        Copyright holder (default: "Your Company")
 #   --year <year>           Copyright year (default: current year)
 #   --workspace <path>      BSP workspace root (default: auto-detect)

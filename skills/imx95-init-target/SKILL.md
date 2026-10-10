@@ -1,4 +1,11 @@
 ---
+
+> ⚠️ **Examples in this repo write `<machine>`, not a literal MACHINE name.** They used to show
+> `imx95-19x19-lpddr5-evk`, which ground-truth §7 marks **[UNKNOWN]** for this board — 1 supporting
+> reference across the fleet against 68 for `imx95-19x19-frdm-pro`. **A usage example is a claim**:
+> anyone copy-pasting it inherits the guess, and a MACHINE that exists but names a different board
+> builds a plausible image for hardware you do not have. Substitute the value you established from
+> **your own** BSP checkout (`conf/machine/*.conf`).
 name: imx95-init-target
 version: "0.1.0"
 platform: imx95-bsp

@@ -48,7 +48,7 @@ USAGE
 REQUIRED
     --workspace <path>    BSP workspace root directory
     --profile <name>      Profile name slug (e.g., frdm-imx95-base)
-    --machine <machine>   Yocto MACHINE value (e.g., imx95-19x19-lpddr5-evk)
+    --machine <machine>   Yocto MACHINE value (e.g. the value from YOUR conf/machine/*.conf)
 
 OPTIONS
     --image <recipe>      Image recipe [default: imx-image-full]
@@ -62,10 +62,10 @@ OPTIONS
 
 EXAMPLES
     $0 --workspace ~/imx95-workspace --profile frdm-imx95-base \\
-       --machine imx95-19x19-lpddr5-evk --image imx-image-full --boot emmc
+       --machine <your-machine> --image imx-image-full --boot emmc
 
     $0 --workspace ~/imx95-workspace --profile acme-carrier-v1 \\
-       --machine imx95-19x19-lpddr5-evk --custom-carrier acme-carrier-v1
+       --machine <your-machine> --custom-carrier acme-carrier-v1
 EOF
 }
 
