@@ -53,7 +53,7 @@ Display current state:
 ```
 Current active target: frdm-imx95-base
   Board   : FRDM-IMX95
-  MACHINE : imx95-19x19-lpddr5-evk
+  MACHINE : imx95-19x19-lpddr5-evk   ⚠️ [UNVERIFIED sample — §7/Q3: 1 fleet ref vs 68 for imx95-19x19-frdm-pro]
   Image   : imx-image-full
 ```
 
@@ -117,7 +117,7 @@ Report success:
 ```
 ✓ Active target switched to: acme-carrier-v1
   Board   : ACME Carrier
-  MACHINE : imx95-19x19-lpddr5-evk
+  MACHINE : imx95-19x19-lpddr5-evk   ⚠️ [UNVERIFIED sample — §7/Q3: 1 fleet ref vs 68 for imx95-19x19-frdm-pro]
   Image   : imx-image-multimedia
   Boot    : eMMC
 
@@ -136,7 +136,7 @@ grep '^MACHINE' <workspace>/build/conf/local.conf 2>/dev/null || echo "not set"
 If there is a mismatch:
 ```
 ⚠️  MACHINE mismatch detected:
-   local.conf MACHINE : imx95-19x19-lpddr5-evk
+   local.conf MACHINE : imx95-19x19-lpddr5-evk   ⚠️ [UNVERIFIED sample — §7/Q3: 1 fleet ref vs 68 for imx95-19x19-frdm-pro]
    New target MACHINE : imx95-15x15-evk
 
    Run imx95-init-source to update local.conf before building.

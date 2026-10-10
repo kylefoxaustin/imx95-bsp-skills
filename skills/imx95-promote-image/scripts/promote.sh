@@ -77,7 +77,17 @@ print('${default}')
 " 2>/dev/null || echo "$default"
 }
 
-MACHINE="$(read_yaml machine imx95-19x19-lpddr5-evk)"
+# shared guard — see lib/bsp_common.sh (one copy, not five)
+_BSP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." 2>/dev/null && pwd)/lib/bsp_common.sh"
+# shellcheck source=/dev/null
+[ -r "$_BSP_LIB" ] && source "$_BSP_LIB"
+MACHINE="$(read_yaml machine "")"
+# Refuse an empty MACHINE; warn on an unverified guess. Was a SILENT default of
+# imx95-19x19-lpddr5-evk — a value ground-truth §7 marks [UNKNOWN] (1 fleet
+# reference vs 68 for imx95-19x19-frdm-pro).
+if declare -f bsp_machine_or_refuse >/dev/null 2>&1; then
+    bsp_machine_or_refuse "$MACHINE" "image promotion" || exit 6
+fi
 IMAGE_RECIPE="$(read_yaml image_recipe imx-image-full)"
 PROFILE_NAME="$(read_yaml profile_name unknown)"
 DEPLOY_DIR_REL="$(read_yaml deploy_dir build/tmp/deploy/images/$MACHINE)"

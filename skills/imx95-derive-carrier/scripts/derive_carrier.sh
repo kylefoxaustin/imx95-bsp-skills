@@ -7,7 +7,7 @@
 #
 # Options:
 #   --carrier-name <name>   Short slug for carrier (e.g. acme-carrier-v1)
-#   --base-dts <file>       Base DTS filename (e.g. imx95-19x19-lpddr5-evk.dts)
+#   --base-dts <file>       Base DTS filename (e.g. <machine>.dts)
 #   --company <name>        Copyright holder (default: "Your Company")
 #   --year <year>           Copyright year (default: current year)
 #   --workspace <path>      BSP workspace root (default: auto-detect)
@@ -23,7 +23,15 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 CARRIER_NAME=""
-BASE_DTS="imx95-19x19-lpddr5-evk.dts"
+# ⚠️ NO DEFAULT BASE DTS. This was imx95-19x19-lpddr5-evk.dts — the DTS of the
+# MACHINE that ground-truth §7 marks [UNKNOWN] (1 fleet reference vs 68 for
+# imx95-19x19-frdm-pro). Deriving a carrier overlay FROM THE WRONG BASE produces
+# a DTS that compiles and describes different hardware, which is the dangerous
+# direction: the failure is silent and downstream.
+# The live DTB on the fleet board is imx95-19x19-frdm-pro-neutron.dtb [MEASURED],
+# but the SOURCE dts that produces it is not established — so this refuses rather
+# than pick one. Pass --base-dts explicitly.
+BASE_DTS=""
 COMPANY="Your Company"
 YEAR="$(date +%Y)"
 WORKSPACE=""
@@ -53,6 +61,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -n "$CARRIER_NAME" ]] || err "--carrier-name is required"
+# 🔴 NO DEFAULT BASE DTS — refuse rather than guess.
+# This used to default to imx95-19x19-lpddr5-evk.dts: the DTS of the MACHINE
+# ground-truth §7 marks [UNKNOWN] (1 fleet reference vs 68 for
+# imx95-19x19-frdm-pro). Deriving a carrier overlay FROM THE WRONG BASE yields a
+# DTS that COMPILES and describes different hardware — silent, and downstream.
+[[ -n "$BASE_DTS" ]] || err "--base-dts is required; this skill will not guess a base DTS.
+  The old default (imx95-19x19-lpddr5-evk.dts) belongs to a MACHINE that is [UNKNOWN]
+  for this board. A wrong base compiles fine and describes other hardware.
+  Establish it from YOUR kernel tree:
+    find arch/arm64/boot/dts/freescale -name 'imx95*'
+  The live DTB on the fleet board is imx95-19x19-frdm-pro-neutron.dtb [MEASURED],
+  but the source .dts that produces it is not established."
 
 # Sanitize carrier name: lowercase, replace spaces/underscores with hyphens
 CARRIER_NAME="$(echo "$CARRIER_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')"

@@ -48,7 +48,7 @@ USAGE
 REQUIRED
     --workspace <path>    BSP workspace root directory
     --profile <name>      Profile name slug (e.g., frdm-imx95-base)
-    --machine <machine>   Yocto MACHINE value (e.g., imx95-19x19-lpddr5-evk)
+    --machine <machine>   Yocto MACHINE value (e.g. the value from YOUR conf/machine/*.conf)
 
 OPTIONS
     --image <recipe>      Image recipe [default: imx-image-full]
@@ -62,10 +62,10 @@ OPTIONS
 
 EXAMPLES
     $0 --workspace ~/imx95-workspace --profile frdm-imx95-base \\
-       --machine imx95-19x19-lpddr5-evk --image imx-image-full --boot emmc
+       --machine <your-machine> --image imx-image-full --boot emmc
 
     $0 --workspace ~/imx95-workspace --profile acme-carrier-v1 \\
-       --machine imx95-19x19-lpddr5-evk --custom-carrier acme-carrier-v1
+       --machine <your-machine> --custom-carrier acme-carrier-v1
 EOF
 }
 
@@ -96,15 +96,47 @@ if ! echo "$PROFILE_NAME" | grep -qE '^[a-z0-9-]+$'; then
     die "Profile name '$PROFILE_NAME' is invalid. Use lowercase letters, digits, and hyphens only."
 fi
 
-# Validate machine name
-VALID_MACHINES=("imx95-19x19-lpddr5-evk" "imx95frdm" "imx95-15x15-evk")
-MACHINE_VALID=false
-for m in "${VALID_MACHINES[@]}"; do
-    [[ "$MACHINE" == "$m" ]] && MACHINE_VALID=true && break
+# ── MACHINE name: the warning polarity used to be BACKWARDS ──────────────────
+#
+# This block previously held VALID_MACHINES=(imx95-19x19-lpddr5-evk imx95frdm
+# imx95-15x15-evk), called it "the known list", and warned when a name was
+# ABSENT from it.
+#
+# 🔴 THAT IS INVERTED RELATIVE TO THE EVIDENCE. Reference counts across the
+# fleet's i.MX95 repos:
+#     imx95-19x19-frdm-pro      68   <- NOT IN THE OLD LIST AT ALL
+#     imx95-15x15-evk           45
+#     imx95-19x19-lpddr5-evk     1   <- the old [DEFAULT]
+# And @95emulator established a CONFIRMED NEGATIVE: Kyle's local imx-yocto-bsp
+# has NO machine conf or DTS for frdm-imx95-pro, and imx95-15x15-lpddr4x-frdm is
+# a DIFFERENT FRDM variant that must not be substituted. So the real MACHINE for
+# this board is [UNKNOWN] — see ground-truth §7 / Q3.
+#
+# Net effect of the old polarity: a user supplying the best-supported candidate
+# was told it was "not known", while a user accepting the 1-reference default
+# got SILENCE — i.e. implied endorsement. The check flagged the probably-right
+# answer and blessed the probably-wrong one.
+#
+# Fixed by warning on the UNVERIFIED names and by stating plainly that absence
+# from this list is not evidence against a name. "Assert-exists, never
+# assert-exclusive" — a closed list of guesses must not adjudicate.
+UNVERIFIED_MACHINES=("imx95-19x19-lpddr5-evk" "imx95frdm" "imx95-15x15-evk")
+for m in "${UNVERIFIED_MACHINES[@]}"; do
+    if [[ "$MACHINE" == "$m" ]]; then
+        warn "MACHINE '$MACHINE' is one of this repo's UNVERIFIED v1 guesses."
+        warn "  imx95-19x19-lpddr5-evk has 1 supporting reference across the fleet;"
+        warn "  imx95-19x19-frdm-pro has 68, and the local BSP has NO conf for"
+        warn "  frdm-imx95-pro at all. The correct MACHINE is [UNKNOWN] (Q3)."
+        warn "  A wrong MACHINE that FAILS bitbake is the good outcome; the bad one"
+        warn "  is a name that exists and builds a DIFFERENT BOARD."
+        warn "  Confirm against your own BSP checkout before trusting this build."
+        break
+    fi
 done
-if ! $MACHINE_VALID; then
-    warn "Machine '$MACHINE' is not in the known list: ${VALID_MACHINES[*]}"
-    warn "Proceeding anyway — verify this is a valid MACHINE for your BSP."
+if [[ ! " ${UNVERIFIED_MACHINES[*]} " == *" $MACHINE "* ]]; then
+    info "MACHINE '$MACHINE' is not among this repo's v1 guesses — that is NOT a"
+    info "  problem and NOT evidence against it. This repo has no verified list to"
+    info "  check against; it only knows which names it previously invented."
 fi
 
 # Validate boot device

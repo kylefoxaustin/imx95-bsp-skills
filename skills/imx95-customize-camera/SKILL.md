@@ -68,7 +68,17 @@ Before generating any DT:
 6. **MCLK frequency** (typically 24000000 Hz)
 7. **PWDN GPIO** — pad name and active-high/low
 8. **RESET_N GPIO** — pad name and active-high/low
-9. **MCLK clock source** — which CCM clock output (typically `IMX95_CLK_CCM_CKO1`)
+9. **MCLK frequency** — the sensor's external clock, in Hz (commonly 24000000).
+   ⚠️ **NOT a CCM clock constant.** An earlier version of this line said *"which CCM clock
+   output (typically `IMX95_CLK_CCM_CKO1`)"* — part of the **fabricated CCM model** that was
+   deleted from `imx95-customize-clocks` (ground-truth §6: clocks on this SoC are
+   **SCMI-mediated**, 24 of 26 `assigned-clocks` nodes reference `scmi_clk`, and v1's
+   `IMX95_CLK_*` constants do not describe this part).
+   **The generator already does the right thing** — `gen_camera_overlay.sh` emits a
+   `fixed-clock` node with `clock-frequency = <MCLK_HZ>` and points the sensor's
+   `clocks`/`clock-names = "xclk"` at it, which sidesteps the SCMI question entirely. Only this
+   documentation was wrong, and a reader following it would have hand-edited the overlay to
+   reference a constant that does not exist.
 
 **NEVER assume GPIO numbers or I2C addresses. Always ask for the schematic.**
 

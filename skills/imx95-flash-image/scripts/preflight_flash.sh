@@ -81,9 +81,66 @@ print('${default}')
 " 2>/dev/null || echo "$default"
 }
 
-MACHINE="$(read_yaml machine imx95-19x19-lpddr5-evk)"
+_BSP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." 2>/dev/null && pwd)/lib/bsp_common.sh"
+# shellcheck source=/dev/null
+[ -r "$_BSP_LIB" ] && source "$_BSP_LIB"
+MACHINE="$(read_yaml machine "")"
+# No silent default. Was imx95-19x19-lpddr5-evk — [UNKNOWN] per ground-truth §7.
+if declare -f bsp_machine_or_refuse >/dev/null 2>&1; then
+    bsp_machine_or_refuse "$MACHINE" "flash pre-flight" || exit 6
+fi
 BOARD_NAME="$(read_yaml name FRDM-IMX95)"
-BOOT_DEVICE="$(read_yaml boot_device emmc)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔴 BOOT DEVICE IS NOT DEFAULTED. IT IS REFUSED UNTIL STATED.
+#
+# This used to read:  BOOT_DEVICE="$(read_yaml boot_device emmc)"
+# — a silent default of `emmc`, with NOTHING anywhere in this skill verifying
+# that the target matches the device the board actually boots from.
+#
+# MEASURED on the fleet FRDM-IMX95-PRO (2026-10-09): `/` is /dev/mmcblk1p2 on
+# the 58 G SD CARD. The eMMC (mmcblk0) holds a SEPARATE, NON-LIVE rootfs at
+# mmcblk0p2. So on that board the silent default produced:
+#
+#   flash --boot-device emmc  (the default)
+#     -> writes the eMMC, which the board DOES NOT BOOT FROM
+#     -> uuu reports success, the board reboots into the OLD SD image
+#     -> NO SIGNAL that anything is wrong. The operator concludes the new
+#        image is live. It is not.
+#
+#   flash --boot-device sd
+#     -> DESTROYS THE RUNNING SYSTEM on that board
+#
+# Two opposite catastrophes selected by one unstated default.
+#
+# ⚠️ AND IT CANNOT BE AUTO-DETECTED HERE. At flash time the board is in USB
+# serial-download (recovery) mode, so it cannot be queried — `findmnt` on the
+# HOST describes the host, not the target. That is precisely why this refuses
+# instead of guessing: there is no authoritative referent available at the
+# moment of the decision, and the convenient one (a default string in a YAML)
+# is exactly the wrong thing to trust. See imx95-device-skills
+# references/imx95-ground-truth.md §0, reestablish-the-referent-law.
+_boot_device_refuse() {
+    echo "FATAL: boot_device is not set, and this skill will NOT guess." >&2
+    echo "" >&2
+    echo "  Set it explicitly:  --boot-device emmc   |   --boot-device sd" >&2
+    echo "  or in targets/active_target.yaml:  boot_device: emmc|sd" >&2
+    echo "" >&2
+    echo "ESTABLISH IT FIRST, WHILE THE BOARD IS STILL BOOTED:" >&2
+    echo "    ssh <board> 'findmnt -no SOURCE /'" >&2
+    echo "  mmcblk0p2 -> the eMMC is live   => --boot-device emmc" >&2
+    echo "  mmcblk1p2 -> the SD card is live => --boot-device sd" >&2
+    echo "" >&2
+    echo "On the fleet FRDM-IMX95-PRO this reads /dev/mmcblk1p2 (SD) [MEASURED" >&2
+    echo "2026-10-09], so --boot-device emmc there writes a device the board" >&2
+    echo "does NOT boot from: uuu reports success and nothing changes." >&2
+    echo "" >&2
+    echo "Once in USB recovery mode the board CANNOT be queried, which is why" >&2
+    echo "this must be known before you start." >&2
+    exit 5
+}
+
+BOOT_DEVICE="$(read_yaml boot_device "")"
 STAGING_REL="$(read_yaml staging_dir staging)"
 UUU_VERSION_MIN="$(read_yaml uuu_version_min 1.5.21)"
 USB_VID_PID="$(read_yaml usb_vid_pid 1fc9:0146)"
@@ -98,6 +155,7 @@ echo ""
 log "=== preflight-flash ==="
 log "Board        : $BOARD_NAME"
 log "MACHINE      : $MACHINE"
+[[ -z "$BOOT_DEVICE" ]] && _boot_device_refuse
 log "Boot device  : $BOOT_DEVICE"
 log "Staging dir  : $STAGING_DIR"
 log "USB VID:PID  : $USB_VID_PID"
