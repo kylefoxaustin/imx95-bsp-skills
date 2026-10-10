@@ -97,7 +97,17 @@ CUSTOM_LAYER_REL="$(read_yaml_field custom_layer)"
 OVERLAY_TRACKER_REL="$(read_yaml_field overlay_tracker)"
 
 # Apply defaults
-MACHINE="${MACHINE:-imx95-19x19-lpddr5-evk}"
+# shared guard — see lib/bsp_common.sh (one copy, not five)
+_BSP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." 2>/dev/null && pwd)/lib/bsp_common.sh"
+# shellcheck source=/dev/null
+[ -r "$_BSP_LIB" ] && source "$_BSP_LIB"
+MACHINE="${MACHINE:-}"
+# Refuse an empty MACHINE; warn on an unverified guess. Was a SILENT default of
+# imx95-19x19-lpddr5-evk — a value ground-truth §7 marks [UNKNOWN] (1 fleet
+# reference vs 68 for imx95-19x19-frdm-pro).
+if declare -f bsp_machine_or_refuse >/dev/null 2>&1; then
+    bsp_machine_or_refuse "$MACHINE" "source tree init" || exit 6
+fi
 DISTRO="${DISTRO:-fsl-imx-xwayland}"
 PROFILE_NAME="${PROFILE_NAME:-unknown}"
 BUILD_DIR_REL="${BUILD_DIR_REL:-build}"

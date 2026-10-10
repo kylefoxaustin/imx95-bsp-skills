@@ -81,7 +81,14 @@ print('${default}')
 " 2>/dev/null || echo "$default"
 }
 
-MACHINE="$(read_yaml machine imx95-19x19-lpddr5-evk)"
+_BSP_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." 2>/dev/null && pwd)/lib/bsp_common.sh"
+# shellcheck source=/dev/null
+[ -r "$_BSP_LIB" ] && source "$_BSP_LIB"
+MACHINE="$(read_yaml machine "")"
+# No silent default. Was imx95-19x19-lpddr5-evk — [UNKNOWN] per ground-truth §7.
+if declare -f bsp_machine_or_refuse >/dev/null 2>&1; then
+    bsp_machine_or_refuse "$MACHINE" "flash pre-flight" || exit 6
+fi
 BOARD_NAME="$(read_yaml name FRDM-IMX95)"
 
 # ─────────────────────────────────────────────────────────────────────────────
