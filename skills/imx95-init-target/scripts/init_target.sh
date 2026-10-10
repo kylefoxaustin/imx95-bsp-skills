@@ -96,47 +96,64 @@ if ! echo "$PROFILE_NAME" | grep -qE '^[a-z0-9-]+$'; then
     die "Profile name '$PROFILE_NAME' is invalid. Use lowercase letters, digits, and hyphens only."
 fi
 
-# ── MACHINE name: the warning polarity used to be BACKWARDS ──────────────────
+# ── MACHINE name: polarity was backwards, and the CAUSE was wrong too ────────
 #
-# This block previously held VALID_MACHINES=(imx95-19x19-lpddr5-evk imx95frdm
-# imx95-15x15-evk), called it "the known list", and warned when a name was
-# ABSENT from it.
+# Two corrections live here. (1) This block once warned when a name was ABSENT
+# from a list of three, which flagged the best-supported candidate and silently
+# blessed the least-supported one. (2) The replacement called the listed names
+# "unverified guesses" — also wrong, and in the less dangerous direction.
 #
-# 🔴 THAT IS INVERTED RELATIVE TO THE EVIDENCE. Reference counts across the
-# fleet's i.MX95 repos:
-#     imx95-19x19-frdm-pro      68   <- NOT IN THE OLD LIST AT ALL
-#     imx95-15x15-evk           45
-#     imx95-19x19-lpddr5-evk     1   <- the old [DEFAULT]
-# And @95emulator established a CONFIRMED NEGATIVE: Kyle's local imx-yocto-bsp
-# has NO machine conf or DTS for frdm-imx95-pro, and imx95-15x15-lpddr4x-frdm is
-# a DIFFERENT FRDM variant that must not be substituted. So the real MACHINE for
-# this board is [UNKNOWN] — see ground-truth §7 / Q3.
+# MEASURED 2026-10-10 in ~/Documents/nxp/linux/imx-yocto-bsp:
+#   imx95-19x19-lpddr5-evk     EXISTS; builds imx95-19x19-evk.dtb
+#   imx95-15x15-lpddr4x-frdm   EXISTS; builds imx95-15x15-frdm.dtb
+#   imx95frdm / imx95-15x15-evk  DO NOT EXIST (v1 inventions)
+#   THIS BOARD RUNS            imx95-19x19-frdm-pro-neutron.dtb
 #
-# Net effect of the old polarity: a user supplying the best-supported candidate
-# was told it was "not known", while a user accepting the 1-reference default
-# got SILENCE — i.e. implied endorsement. The check flagged the probably-right
-# answer and blessed the probably-wrong one.
+# ⇒ Nine imx95 machines exist and NONE builds this board's device tree. The
+#   hazard is a VALID name that builds a DIFFERENT BOARD, not a doubtful one.
+#   Likely cause [SOURCED — Kyle, 2026-10-10, unverified]: NXP may not have
+#   released a formal FRDM-IMX95-PRO BSP yet, in which case a newer snapshot
+#   does not help and a custom machine conf is the path.
 #
-# Fixed by warning on the UNVERIFIED names and by stating plainly that absence
-# from this list is not evidence against a name. "Assert-exists, never
-# assert-exclusive" — a closed list of guesses must not adjudicate.
-UNVERIFIED_MACHINES=("imx95-19x19-lpddr5-evk" "imx95frdm" "imx95-15x15-evk")
-for m in "${UNVERIFIED_MACHINES[@]}"; do
+# The shared guard in lib/bsp_common.sh now carries the per-case messages; this
+# block defers to it and keeps only the local list for the no-lib fallback.
+# Local fallback only — lib/bsp_common.sh carries the authoritative per-case
+# messages. Split by what the BSP actually contains (verified 2026-10-10).
+_EXISTS_WRONG_BOARD=("imx95-19x19-lpddr5-evk" "imx95-15x15-lpddr4x-frdm" "imx95evk")
+_NONEXISTENT=("imx95frdm" "imx95-15x15-evk")
+_machine_noted=0
+for m in "${_EXISTS_WRONG_BOARD[@]}"; do
     if [[ "$MACHINE" == "$m" ]]; then
-        warn "MACHINE '$MACHINE' is one of this repo's UNVERIFIED v1 guesses."
-        warn "  imx95-19x19-lpddr5-evk has 1 supporting reference across the fleet;"
-        warn "  imx95-19x19-frdm-pro has 68, and the local BSP has NO conf for"
-        warn "  frdm-imx95-pro at all. The correct MACHINE is [UNKNOWN] (Q3)."
-        warn "  A wrong MACHINE that FAILS bitbake is the good outcome; the bad one"
-        warn "  is a name that exists and builds a DIFFERENT BOARD."
-        warn "  Confirm against your own BSP checkout before trusting this build."
-        break
+        warn "MACHINE '$MACHINE' EXISTS in meta-imx and bitbake will accept it —"
+        warn "  but it does NOT build this board's device tree:"
+        warn "    imx95-19x19-lpddr5-evk   -> imx95-19x19-evk.dtb"
+        warn "    imx95-15x15-lpddr4x-frdm -> imx95-15x15-frdm.dtb"
+        warn "    THIS BOARD RUNS             imx95-19x19-frdm-pro-neutron.dtb"
+        warn "  Nine imx95 machines exist and none matches a 19x19 FRDM-PRO."
+        warn "  ⇒ A VALID name that builds a DIFFERENT BOARD. The image will look"
+        warn "    fine and carry the wrong device tree; a MACHINE that FAILS"
+        warn "    bitbake is the good outcome."
+        warn "  Likely cause [SOURCED — Kyle 2026-10-10, unverified]: NXP may not"
+        warn "    have released a formal FRDM-IMX95-PRO BSP yet. If so a newer"
+        warn "    snapshot will not help — write a custom machine conf."
+        _machine_noted=1; break
     fi
 done
-if [[ ! " ${UNVERIFIED_MACHINES[*]} " == *" $MACHINE "* ]]; then
-    info "MACHINE '$MACHINE' is not among this repo's v1 guesses — that is NOT a"
-    info "  problem and NOT evidence against it. This repo has no verified list to"
-    info "  check against; it only knows which names it previously invented."
+if [[ "$_machine_noted" == "0" ]]; then
+    for m in "${_NONEXISTENT[@]}"; do
+        if [[ "$MACHINE" == "$m" ]]; then
+            warn "MACHINE '$MACHINE' does NOT exist in meta-imx — a v1 invention."
+            warn "  Nearest real names: imx95-15x15-lpddr4x-evk / -frdm."
+            warn "  ⇒ This is the SAFE failure: bitbake stops with 'no such machine'"
+            warn "    instead of silently building a different board. Fix the name."
+            _machine_noted=1; break
+        fi
+    done
+fi
+if [[ "$_machine_noted" == "0" ]]; then
+    info "MACHINE '$MACHINE' is not one this repo has anything to say about — that"
+    info "  is NOT a problem and NOT evidence against it. This repo knows only which"
+    info "  names exist in the local BSP and which ones v1 invented."
 fi
 
 # Validate boot device
